@@ -92,6 +92,7 @@ watch('timezone.csv', function (event, filename) {
                     modifiedDevices.push(modifiedFileContents[i])
                 }
             }
+            await formatDate(fileContents);
             await formatDate(modifiedDevices);
             modifiedDevices.forEach((device) => {
                 clients.forEach((client) => {
