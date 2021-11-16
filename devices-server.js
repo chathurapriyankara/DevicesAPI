@@ -73,7 +73,6 @@ watch('timezone.csv', function (event, filename) {
         })
         .on('end', async () => {
             await formatDate(fileContents);
-            console.log(fileContents);
             clients.forEach(function (client) {
                 client.send(JSON.stringify(fileContents));
             })
