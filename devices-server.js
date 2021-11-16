@@ -6,6 +6,8 @@ const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const geoTz = require('geo-tz');
+const bodyParser = require('body-parser');
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 const app = express();
 const key = 'AIzaSyD9agllUXdSWHnIYPbbRAFjHZ3hjKa2BV8';
 const axios = require('axios');
@@ -25,8 +27,17 @@ fs.createReadStream('timezone.csv')
         await formatDate(fileContents);
     });
 
-app.get('/devices', function(req, res){
+app.get('/get-devices', function(req, res){
     res.send(JSON.stringify(fileContents));
+});
+
+app.post('/device',urlencodedParser, function (req, res){
+    fileContents.forEach((device)=>{
+        if(device['id'] === req.body.id) {
+            res.send(JSON.stringify(device));
+        }
+    });
+    res.send('Invalid device id');
 });
 
 server.listen(webSocketPort, function () {
