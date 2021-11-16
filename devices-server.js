@@ -21,7 +21,7 @@ const webSocketPort = 3030;
 //Load the initial data from the CSV file
 fs.createReadStream('timezone.csv')
     .pipe(csv())
-    .on('data', async (data) =>
+    .on('data', (data) =>
         fileContents.push(data)
     ).on('end', async () => {
         await formatDate(fileContents);
@@ -66,12 +66,12 @@ wsServer.on('request', function (request) {
 });
 
 // Watch for the file updates
-watch('timezone.csv', async function (event, filename) {
+watch('timezone.csv', function (event, filename) {
     //Load the variable fileContents to a new empty array
     fileContents = [];
     fs.createReadStream('timezone.csv')
         .pipe(csv())
-        .on('data', async (data) => {
+        .on('data', (data) => {
             fileContents.push(data);
         })
         .on('end', async () => {
