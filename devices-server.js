@@ -7,7 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const geoTz = require('geo-tz');
 const bodyParser = require('body-parser');
-var urlencodedParser = bodyParser.urlencoded({ extended: false })
+var urlencodedParser = bodyParser.urlencoded({extended: false})
 const app = express();
 const key = 'AIzaSyD9agllUXdSWHnIYPbbRAFjHZ3hjKa2BV8';
 const axios = require('axios');
@@ -24,30 +24,27 @@ fs.createReadStream('timezone.csv')
     .on('data', (data) =>
         fileContents.push(data)
     ).on('end', async () => {
-        await formatDate(fileContents);
-    });
+    await formatDate(fileContents);
+});
 
-app.get('/get-devices', function(req, res){
+app.get('/get-devices', function (req, res) {
     res.send(JSON.stringify(fileContents));
 });
 
-app.post('/device',urlencodedParser, function (req, res){
+app.post('/device', urlencodedParser, function (req, res) {
     let deviceFound = false;
-    fileContents.forEach((device)=>{
-        if(device['id'] === req.body.id) {
+    fileContents.forEach((device) => {
+        if (device['id'] === req.body.id) {
             deviceFound = true;
             res.send(JSON.stringify(device));
         }
     });
-    if(!deviceFound) {
+    if (!deviceFound) {
         res.send('Invalid device id');
     }
 });
 
-server.listen(webSocketPort, function () {
-    console.log((new Date()) + `WebSocket Server is listening on port ${webSocketPort}!`);
-});
-
+server.listen(webSocketPort, () => console.log((new Date()) + `WebSocket Server is listening on port ${webSocketPort}!`));
 app.listen(restAPIPort, () => console.log(`REST service is listening on port ${restAPIPort}!`))
 
 wsServer = new WebSocketServer({
@@ -76,7 +73,8 @@ watch('timezone.csv', function (event, filename) {
         })
         .on('end', async () => {
             await formatDate(fileContents);
-            clients.forEach(function (client){
+            console.log(fileContents);
+            clients.forEach(function (client) {
                 client.send(JSON.stringify(fileContents));
             })
         });
