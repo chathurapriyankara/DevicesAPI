@@ -83,25 +83,23 @@ watch('timezone.csv', function (event, filename) {
     fs.createReadStream('timezone.csv')
         .pipe(csv())
         .on('data', (data) => modifiedFileContents.push(data))
-        .on('end', () => {
-            clients.forEach(function (client) {
-                let originalDevice;
-                let modifiedDevice;
-                fileContents.forEach((device) => {
-                    if (device['id'] === client.req) {
-                        originalDevice = device;
-                    }
-                });
-                modifiedFileContents.forEach((device) => {
-                    if (device['id'] === client.req) {
-                        modifiedDevice = device;
-                    }
-                });
-                if (!_.isEqual(originalDevice, modifiedDevice)) {
-                    fileContents[fileContents.indexOf(originalDevice)] = modifiedDevice;
-                    client.con.send(JSON.stringify(modifiedDevice));
+        .on('end', async () => {
+            let modifiedDevices = [];
+            for (let i = 0; i < fileContents.length; i++) {
+                //On device location change
+                if (fileContents[i].lat !== modifiedFileContents[i].lat || fileContents[i].lng !== modifiedFileContents[i].lng) {
+                    fileContents[i] = modifiedFileContents[i];
+                    modifiedDevices.push(modifiedFileContents[i])
                 }
-            })
+            }
+            await formatDate(modifiedDevices);
+            modifiedDevices.forEach((device) => {
+                clients.forEach((client) => {
+                    if (device['id'] === client.req) {
+                        client.con.send(JSON.stringify(device));
+                    }
+                });
+            });
         });
 });
 
@@ -125,7 +123,6 @@ async function formatDate(fileData) {
 
                 const date = new Date(timestamp * 1000);
                 timezone = geoTz(latitude, longitude);
-                // console.log(DateTime.fromISO(date, { zone: timezone }))
                 const nDate = date.toLocaleString('en-GB', {
                     timeZone: timezone
                 });
