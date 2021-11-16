@@ -32,12 +32,16 @@ app.get('/get-devices', function(req, res){
 });
 
 app.post('/device',urlencodedParser, function (req, res){
+    let deviceFound = false;
     fileContents.forEach((device)=>{
         if(device['id'] === req.body.id) {
+            deviceFound = true;
             res.send(JSON.stringify(device));
         }
     });
-    res.send('Invalid device id');
+    if(!deviceFound) {
+        res.send('Invalid device id');
+    }
 });
 
 server.listen(webSocketPort, function () {
