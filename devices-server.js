@@ -5,13 +5,16 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
-const geoTz = require('geo-tz')
+const geoTz = require('geo-tz');
+const app = express();
 const key = 'AIzaSyD9agllUXdSWHnIYPbbRAFjHZ3hjKa2BV8';
 const axios = require('axios');
-const {response} = require("express");
+const {json} = require("express");
 const clients = [];
 let fileContents = [];
 const server = http.createServer();
+const restAPIPort = 5050;
+const webSocketPort = 3030;
 
 //Load the initial data from the CSV file
 fs.createReadStream('timezone.csv')
@@ -22,9 +25,15 @@ fs.createReadStream('timezone.csv')
         await formatDate(fileContents);
     });
 
-server.listen(3030, function () {
-    console.log((new Date()) + ' Server is listening on port 3030');
+app.get('/devices', function(req, res){
+    res.send(JSON.stringify(fileContents));
 });
+
+server.listen(webSocketPort, function () {
+    console.log((new Date()) + `WebSocket Server is listening on port ${webSocketPort}!`);
+});
+
+app.listen(restAPIPort, () => console.log(`REST service is listening on port ${restAPIPort}!`))
 
 wsServer = new WebSocketServer({
     httpServer: server,
@@ -49,7 +58,9 @@ watch('timezone.csv', async function (event, filename) {
         })
         .on('end', async () => {
             await formatDate(fileContents);
-            console.log(fileContents);
+            clients.forEach(function (client){
+                client.send(JSON.stringify(fileContents));
+            })
         });
 });
 
