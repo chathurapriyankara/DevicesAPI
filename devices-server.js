@@ -9,6 +9,7 @@ const geoTz = require('geo-tz');
 const bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({extended: false})
 const app = express();
+const _ = require('lodash');
 const key = 'AIzaSyD9agllUXdSWHnIYPbbRAFjHZ3hjKa2BV8';
 const axios = require('axios');
 const {json} = require("express");
@@ -54,8 +55,21 @@ wsServer = new WebSocketServer({
 wsServer.on('request', function (request) {
     console.log((new Date()) + ' Recieved a new connection from origin ' + request.origin + '.');
     const connection = request.accept(null);
-    connection.send(JSON.stringify(fileContents));
-    clients.push(connection);
+    connection.on('message', (message) => {
+        let selectedDevice;
+        fileContents.forEach((device) => {
+            if (device['id'] === message.utf8Data) {
+                selectedDevice = device;
+            }
+        });
+        if (selectedDevice) {
+            connection.send(JSON.stringify(selectedDevice));
+        } else {
+            connection.send('Invalid device ID');
+        }
+        let client = {con: connection, req: message.utf8Data}
+        clients.push(client);
+    });
     connection.on('close', function (reasonCode, description) {
         clients.splice(clients.indexOf(connection), 1);
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
@@ -64,17 +78,29 @@ wsServer.on('request', function (request) {
 
 // Watch for the file updates
 watch('timezone.csv', function (event, filename) {
-    //Load the variable fileContents to a new empty array
-    fileContents = [];
+    //Set the variable fileContents to a new empty array
+    let modifiedFileContents = [];
     fs.createReadStream('timezone.csv')
         .pipe(csv())
-        .on('data', (data) => {
-            fileContents.push(data);
-        })
-        .on('end', async () => {
-            await formatDate(fileContents);
+        .on('data', (data) => modifiedFileContents.push(data))
+        .on('end', () => {
             clients.forEach(function (client) {
-                client.send(JSON.stringify(fileContents));
+                let originalDevice;
+                let modifiedDevice;
+                fileContents.forEach((device) => {
+                    if (device['id'] === client.req) {
+                        originalDevice = device;
+                    }
+                });
+                modifiedFileContents.forEach((device) => {
+                    if (device['id'] === client.req) {
+                        modifiedDevice = device;
+                    }
+                });
+                if (!_.isEqual(originalDevice, modifiedDevice)) {
+                    fileContents[fileContents.indexOf(originalDevice)] = modifiedDevice;
+                    client.con.send(JSON.stringify(modifiedDevice));
+                }
             })
         });
 });
