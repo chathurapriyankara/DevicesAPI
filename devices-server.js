@@ -88,11 +88,11 @@ watch('timezone.csv', function (event, filename) {
             for (let i = 0; i < fileContents.length; i++) {
                 //On device location change
                 if (fileContents[i].lat !== modifiedFileContents[i].lat || fileContents[i].lng !== modifiedFileContents[i].lng) {
-                    fileContents[i] = await formatSingleDate(modifiedFileContents[i]);
+                    fileContents[i] = modifiedFileContents[i];
                     modifiedDevices.push(modifiedFileContents[i])
                 }
             }
-            //await formatDates(fileContents);
+            await formatDates(fileContents);
             await formatDates(modifiedDevices);
             modifiedDevices.forEach((device) => {
                 clients.forEach((client) => {
