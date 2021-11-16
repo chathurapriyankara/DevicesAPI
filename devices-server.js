@@ -53,8 +53,8 @@ wsServer = new WebSocketServer({
 });
 
 wsServer.on('request', function (request) {
-    console.log((new Date()) + ' Recieved a new connection from origin ' + request.origin + '.');
-    const connection = request.accept(null);
+    //console.log((new Date()) + ' Recieved a new connection from origin ' + request.origin + '.');
+    let connection = request.accept('echo-protocol', request.origin);
     connection.on('message', (message) => {
         let selectedDevice;
         fileContents.forEach((device) => {
