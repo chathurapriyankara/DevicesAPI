@@ -59,7 +59,10 @@ wsServer.on('request', function (request) {
     const connection = request.accept(null);
     connection.send(JSON.stringify(fileContents));
     clients.push(connection);
-    console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+    connection.on('close', function (reasonCode, description) {
+        clients.splice(clients.indexOf(connection), 1);
+        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+    });
 });
 
 // Watch for the file updates
